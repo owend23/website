@@ -1,19 +1,28 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import unicode_literals
-
 from django.db import models
-from solo.models import SingletonModel
-from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from django.contrib.auth.models import User
 
-
-class SeoConfig(SingletonModel):
-    metrika_id = models.PositiveIntegerField(_('YA Metrika ID'), blank=True, null=True)
-    end_title = models.CharField(_('End title'), max_length=64, blank=True, null=True)
-    author = models.CharField(_('Author'), max_length=64, blank=True, null=True)
-    keywords = models.CharField(_('Keywords'), max_length=128, blank=True, null=True)
-    description = models.CharField(_('Description'), max_length=256, blank=True, null=True)
-
+class Post(models.Model):
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('published', 'Published'),
+    )
+    title = models.CharField(max_length=250)
+    slug = models.SlugField(max_length=250,
+                            unique_for_date='publish')
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               related_name='blog_posts')
+    body = models.TextField()
+    publish = models.DateTimeField(default=timezone.now)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=10,
+                              choices=STATUS_CHOICES,
+                              default='draft')
+    
     class Meta:
-        verbose_name = _('SEO config')
-        verbose_name_plural = _('SEO configs')
+        ordering = ('-publish',)
+        
+    def __str__(self):
+        return self.title
